@@ -49,6 +49,7 @@ impl TargetOs {
     /// Returns the current compilation target OS.
     ///
     /// Uses `#[cfg]` attributes to detect the platform at compile time.
+    #[must_use]
     pub fn current() -> Self {
         #[cfg(target_os = "linux")]
         {
@@ -108,7 +109,7 @@ pub struct FindLibBuilder {
     first_only: bool,
     /// Assumed target OS; uses compile-time cfg if None.
     assume_os: Option<TargetOs>,
-    /// Custom filename generation function; overrides default library_filename behavior.
+    /// Custom filename generation function; overrides default `library_filename` behavior.
     filename_fn: Option<FileNameFn>,
 }
 
@@ -128,6 +129,7 @@ impl Default for FindLibBuilder {
 
 impl FindLibBuilder {
     /// Creates a new `FindLibBuilder` with default settings.
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
@@ -139,6 +141,7 @@ impl FindLibBuilder {
     /// * `1` - only search the given directories (default)
     /// * Positive values - search up to N levels deep
     /// * Negative values - unlimited depth
+    #[must_use]
     pub fn depth(mut self, n: i32) -> Self {
         self.depth = n;
         self
@@ -175,6 +178,7 @@ impl FindLibBuilder {
     /// Disables default search paths.
     ///
     /// When called, only explicitly added paths will be searched.
+    #[must_use]
     pub fn no_defaults(mut self) -> Self {
         self.use_defaults = false;
         self
@@ -184,6 +188,7 @@ impl FindLibBuilder {
     ///
     /// In this mode, `find_result` may return `FindError::Ambiguous` if multiple
     /// libraries are found.
+    #[must_use]
     pub fn strict(mut self) -> Self {
         self.first_only = false;
         self
@@ -205,6 +210,7 @@ impl FindLibBuilder {
     /// Sets `assume_os` via string (convenient for command-line/config file input).
     ///
     /// See [`TargetOs::from_str`] for supported strings.
+    #[must_use]
     pub fn assume_os_str(mut self, s: &str) -> Self {
         self.assume_os = Some(TargetOs::from_str(s).expect("Unknown Error"));
         self
@@ -214,7 +220,7 @@ impl FindLibBuilder {
     ///
     /// This completely overrides the default `library_filename` logic based on OS.
     /// The closure receives the raw library name (e.g., "foo") and should return
-    /// the full filename (e.g., "libfoo_custom.so.1").
+    /// the full filename (e.g., "`libfoo_custom.so.1`").
     ///
     /// # Examples
     ///
@@ -264,10 +270,11 @@ impl FindLibBuilder {
     /// let builder = FindLibBuilder::new()
     ///     .set_prefix_suffix("", "");
     /// ```
+    #[must_use]
     pub fn set_prefix_suffix(mut self, prefix: &str, suffix: &str) -> Self {
         let prefix = prefix.to_string();
         let suffix = suffix.to_string();
-        self.filename_fn = Some(Box::new(move |name| format!("{}{}{}", prefix, name, suffix)));
+        self.filename_fn = Some(Box::new(move |name| format!("{prefix}{name}{suffix}")));
         self
     }
 
@@ -292,12 +299,12 @@ impl FindLibBuilder {
         // Fall back to OS-based naming
         let os = self.effective_os();
         match os {
-            TargetOs::Linux => format!("lib{}.so", name),
-            TargetOs::Macos => format!("lib{}.dylib", name),
-            TargetOs::Windows => format!("{}.dll", name),
+            TargetOs::Linux => format!("lib{name}.so"),
+            TargetOs::Macos => format!("lib{name}.dylib"),
+            TargetOs::Windows => format!("{name}.dll"),
             TargetOs::Unknown => {
                 // Fallback to Linux-style naming for unknown OS
-                format!("lib{}.so", name)
+                format!("lib{name}.so")
             }
         }
     }
@@ -402,7 +409,7 @@ impl FindLibBuilder {
             .max_depth(max_depth)
             .follow_links(true)
             .into_iter()
-            .filter_map(|e| e.ok())
+            .filter_map(std::result::Result::ok)
         {
             let path = entry.path();
             // eprintln!("[*] PATH: {}", &path.display());
@@ -457,8 +464,7 @@ impl FindLibBuilder {
 
         if all_found.is_empty() {
             Err(FindError::NotFound(format!(
-                "library '{}' (resolved to '{}') not found in any search path",
-                name, filename
+                "library '{name}' (resolved to '{filename}') not found in any search path"
             )))
         } else if all_found.len() == 1 {
             Ok(all_found.swap_remove(0))
@@ -478,6 +484,7 @@ impl FindLibBuilder {
     ///     println!("Found at: {:?}", path);
     /// }
     /// ```
+    #[must_use]
     pub fn find(&self, name: &str) -> Option<PathBuf> {
         self.find_result(name).ok()
     }
@@ -489,7 +496,7 @@ mod tests {
 
     #[test]
     fn test_custom_filename_fn() {
-        let builder = FindLibBuilder::new().set_filename_fn(|name| format!("my_{}_v2.so", name));
+        let builder = FindLibBuilder::new().set_filename_fn(|name| format!("my_{name}_v2.so"));
 
         assert_eq!(builder.library_filename("test"), "my_test_v2.so");
     }
