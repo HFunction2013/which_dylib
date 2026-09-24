@@ -1,0 +1,18 @@
+[package]
+name = "which_dylib"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+authors = ["HFunction2013 <HFunction2013@outlook.com>"]
+license = "MIT"
+repository = "https://github.com/HFunction2013/which_dylib"
+homepage = "https://github.com/HFunction2013/which_dylib"
+documentation = "https://docs.rs/which_dylib"
+description = "Find which dynamic library a process/runtime is using"
+readme = "README.md"
+keywords = ["dylib", "shared-library", "walkdir"]
+categories = ["os"]
+
+[dependencies]
+walkdir = "2"
+process_path = "0.1"
