@@ -1,6 +1,6 @@
 [package]
 name = "which_dylib"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 rust-version = "1.85"
 authors = ["HFunction2013 <HFunction2013@outlook.com>"]
@@ -12,6 +12,7 @@ description = "Find which dynamic library a process/runtime is using"
 readme = "README.md"
 keywords = ["dylib", "shared-library", "walkdir"]
 categories = ["os"]
+exclude = [".gitignore"]
 
 [dependencies]
 walkdir = "2"
